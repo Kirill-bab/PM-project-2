@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,14 +20,20 @@ namespace GameWebApplication.Models
                 _isActive = value;
             }
         }
-        
+        private bool _isReadyForNextRound;
         private bool _isActive;
         private readonly Figure _currentFigure;
+        private Stopwatch _currentPeriodTime;
+        private bool _isConnected;
+        private TimeSpan _userTimeInGame => TimeSpan.Parse(this.Account.TimeInGame);
 
         public UserDto()
         {
             IsActive = false;
             _currentFigure = Figure.None;
+            _currentPeriodTime = new Stopwatch();
+            _isReadyForNextRound = false;
+            _isConnected = false;
         }
 
         public UserDto(IUserAccount account)
@@ -34,6 +41,18 @@ namespace GameWebApplication.Models
             Account = account ?? throw new ArgumentNullException(nameof(account));
             IsActive = false;
             _currentFigure = Figure.None;
+            _currentPeriodTime = new Stopwatch();
+            _isReadyForNextRound = false;
+            _isConnected = false;
+        }
+        public void SetReady()
+        {
+            _isReadyForNextRound = true;
+        }
+
+        public bool IsReadyForNextRound()
+        {
+            return _isReadyForNextRound;
         }
 
         public void Activate()
@@ -41,6 +60,8 @@ namespace GameWebApplication.Models
             if (!IsActive)
             {
                 IsActive = true;
+                _currentPeriodTime.Start();
+                _isReadyForNextRound = true;
             }
         }
         public Figure GetCurrentFigure()
@@ -51,22 +72,39 @@ namespace GameWebApplication.Models
         {
             if (session.Rounds.Count == 0) return;
 
-            Account.Statistics.GamesList.Add(session);
+            Account.Statistics.SessionsList.Add(session);
+        }
+
+        public bool CheckForConnection()
+        {
+            return _isConnected;
         }
 
         public void Disactivate()
         {
-            IsActive = false;
+            if (IsActive)
+            {
+                IsActive = false;
+                _currentPeriodTime.Stop();
+                this.Account.TimeInGame = (_currentPeriodTime.Elapsed + _userTimeInGame).ToString();
+                _isReadyForNextRound = false;
+                _isConnected = false;
+            }
         }
-        public Figure GetCurrentFigure()
-        {
-            return _currentFigure;
-        }
-        public void RegisterNewSession(Session session)
-        {
-            if (session.Rounds.Count == 0) return;
 
-            Account.Statistics.GamesList.Add(session);
+        public void Connect()
+        {
+            _isConnected = true;
+        }
+
+        public void ResetConnection()
+        {
+            _isConnected = false;
+        }
+
+        bool IUserDto.IsActive()
+        {
+            return IsActive;
         }
     }
 }

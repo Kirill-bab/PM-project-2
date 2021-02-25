@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace GameWebApplication.Abstractions
 {
-    interface IGamePerformer
+    public interface IGamePerformer
     {
         public Task<Round> StartRoundWithPlayerAsync(IUserDto user1, IUserDto user2,
             CancellationToken ct, CancellationToken timeoutCt);

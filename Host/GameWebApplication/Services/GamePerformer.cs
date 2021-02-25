@@ -20,7 +20,7 @@ namespace GameWebApplication.Services
                 user2.GetCurrentFigure() == Figure.None)
                 {
                     ct.ThrowIfCancellationRequested();
-                    if (timeoutCt.IsCancellationRequested) throw new TimeoutException(nameof(timeoutCt));
+                    if (timeoutCt.IsCancellationRequested) return null;
                 }
 
                 var result = CheckForWinner(user1.GetCurrentFigure(), user2.GetCurrentFigure());

@@ -7,8 +7,7 @@ namespace GameWebApplication.Abstractions
     interface IMatchmaker
     { // + logger
         public Task StartRegularSesionAsync(IUserDto user1, IUserDto user2, 
-            CancellationToken ct, CancellationToken timeoutCt);
-        public Task StartAISesionAsync(IUserDto user, CancellationToken ct,
-            CancellationToken timeoutCt);
+            CancellationToken ct);
+        public Task StartAISesionAsync(IUserDto user, CancellationToken ct);
     }
 }

@@ -10,6 +10,12 @@ namespace GameWebApplication.Models
         public IUserAccount Account { get; set; }
         public void Activate();
         public void Disactivate();
+        public void RegisterNewSession(Session session);
         public Figure GetCurrentFigure();
+        public bool IsReadyForNextRound();
+        public bool CheckForConnection();
+        public void Connect();
+        public void ResetConnection();
+        public bool IsActive();
     }
 }

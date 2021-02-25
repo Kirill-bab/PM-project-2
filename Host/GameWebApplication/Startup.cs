@@ -1,3 +1,4 @@
+using GameWebApplication.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +39,8 @@ namespace GameWebApplication
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameWebApplication", Version = "v1" });
             });
+
+            services.AddHostedService<UserConnectionValidator>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

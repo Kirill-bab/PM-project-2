@@ -10,5 +10,6 @@ namespace GameWebApplication.Models
         public string Login { get; set; }
         public string Password { get; set; }
         public IStatistics Statistics { get; set; }
+        public string  TimeInGame { get; set; }
     }
 }
