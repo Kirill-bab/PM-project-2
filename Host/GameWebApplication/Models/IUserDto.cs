@@ -9,6 +9,7 @@ namespace GameWebApplication.Models
     {
         public IUserAccount Account { get; set; }
         public void Activate();
+        public void Disactivate();
         public Figure GetCurrentFigure();
     }
 }

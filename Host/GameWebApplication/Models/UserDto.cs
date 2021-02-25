@@ -38,7 +38,25 @@ namespace GameWebApplication.Models
 
         public void Activate()
         {
-            IsActive = true;
+            if (!IsActive)
+            {
+                IsActive = true;
+            }
+        }
+        public Figure GetCurrentFigure()
+        {
+            return _currentFigure;
+        }
+        public void RegisterNewSession(Session session)
+        {
+            if (session.Rounds.Count == 0) return;
+
+            Account.Statistics.GamesList.Add(session);
+        }
+
+        public void Disactivate()
+        {
+            IsActive = false;
         }
         public Figure GetCurrentFigure()
         {

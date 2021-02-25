@@ -1,4 +1,4 @@
-﻿using GameWebApplication.Models;
+using GameWebApplication.Models;
 using System.Threading.Tasks;
 
 namespace GameWebApplication.Abstractions
@@ -11,7 +11,8 @@ namespace GameWebApplication.Abstractions
         public Task StartRandomSessionAsync(IUserDto user1);
         public Task StartPrivateSessionAsync(IUserDto user);
         public Task StartAISessionAsync(IUserDto user);
-
+        public void InitializeUserStorage();
+        public void SaveStorage();
         public Task GetUserStatistics(IUserDto user);
     }
 }

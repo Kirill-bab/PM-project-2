@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using GameWebApplication.Abstractions;
 using System.Threading.Tasks;
 using System.Threading;
@@ -11,7 +11,8 @@ namespace GameWebApplication.Services
     {
         private static readonly TaskFactory _factory = new TaskFactory();
 
-        public Task<Round> StartRoundWithPlayerAsync(IUserDto user1, IUserDto user2, CancellationToken ct, CancellationToken timeoutCt)
+        public Task<Round> StartRoundWithPlayerAsync(IUserDto user1, IUserDto user2, 
+            CancellationToken ct, CancellationToken timeoutCt)
         {
             return _factory.StartNew<Round>(() =>
             {
@@ -19,7 +20,7 @@ namespace GameWebApplication.Services
                 user2.GetCurrentFigure() == Figure.None)
                 {
                     ct.ThrowIfCancellationRequested();
-                    ct.
+                    if (timeoutCt.IsCancellationRequested) throw new TimeoutException(nameof(timeoutCt));
                 }
 
                 var result = CheckForWinner(user1.GetCurrentFigure(), user2.GetCurrentFigure());
@@ -57,6 +58,7 @@ namespace GameWebApplication.Services
                 while (user.GetCurrentFigure() == Figure.None)
                 {
                     ct.ThrowIfCancellationRequested();
+                    if (timeoutCt.IsCancellationRequested) throw new TimeoutException(nameof(timeoutCt));
                 }
 
                 var result = CheckForWinner(user.GetCurrentFigure(), aiFigure);

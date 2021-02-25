@@ -16,20 +16,18 @@ namespace GameWebApplication.Services
         {
              await _factory.StartNew(async () =>
             {
-                var session = new Session(user.Account.Login, "computer");
-                try
+                while (!ct.IsCancellationRequested)
                 {
-                    while (true)
+                    var session = new Session(user.Account.Login, "computer");
+                    try
                     {
-                      
 
-                        //await
                     }
-                }
-                catch(TaskCanceledException)
-                {
-
-                }
+                    catch (TaskCanceledException)
+                    {
+                        if (session.Rounds.Count == 0) return;                        
+                    }
+                 }
             });
         }
 
