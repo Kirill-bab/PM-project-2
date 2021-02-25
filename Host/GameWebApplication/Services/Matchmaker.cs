@@ -27,7 +27,7 @@ namespace GameWebApplication.Services
                     {
                         if (session.Rounds.Count == 0) return;                        
                     }
-                }
+                 }
             });
         }
 
