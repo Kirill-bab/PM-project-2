@@ -1,4 +1,4 @@
-﻿using GameWebApplication.Models;
+using GameWebApplication.Models;
 using System.Threading.Tasks;
 
 namespace GameWebApplication.Abstractions

@@ -1,4 +1,4 @@
-﻿using GameWebApplication.Models;
+using GameWebApplication.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,5 +17,4 @@ namespace GameWebApplication.Abstractions
         public Task UnBanUser(IUserDto user);
         public string GetUsers();
         public void InitializeUserList(string json);
-    }
 }

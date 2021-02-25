@@ -12,7 +12,7 @@ namespace GameWebApplication.Models
         public string Player1 { get; set; }
         public string Player2 { get; set; }
         public List<Round> Rounds { get; set; }
-        
+      
         public Session()
         {
 
