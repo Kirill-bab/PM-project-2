@@ -7,7 +7,7 @@ namespace GameWebApplication.Models
 {
     public class Statistics : IStatistics
     {
-        public List<Game> GamesList { get; set; }
+        public List<Session> GamesList { get; set; }
         public int MyProperty { get; set; }
     }
 }

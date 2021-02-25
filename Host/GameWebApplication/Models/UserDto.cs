@@ -8,7 +8,6 @@ namespace GameWebApplication.Models
     public class UserDto : IUserDto
     {
         public IUserAccount Account { get; set; }
-        public IStatistics Statistics { get; set; }
         public bool IsActive
         {
             get
@@ -20,24 +19,36 @@ namespace GameWebApplication.Models
                 _isActive = value;
             }
         }
-        [NonSerialized]
+        
         private bool _isActive;
+        private readonly Figure _currentFigure;
 
         public UserDto()
         {
             IsActive = false;
+            _currentFigure = Figure.None;
         }
 
-        public UserDto(IUserAccount account, IStatistics statistics)
+        public UserDto(IUserAccount account)
         {
             Account = account ?? throw new ArgumentNullException(nameof(account));
-            Statistics = statistics ?? throw new ArgumentNullException(nameof(statistics));
             IsActive = false;
+            _currentFigure = Figure.None;
         }
 
         public void Activate()
         {
             IsActive = true;
+        }
+        public Figure GetCurrentFigure()
+        {
+            return _currentFigure;
+        }
+        public void RegisterNewSession(Session session)
+        {
+            if (session.Rounds.Count == 0) return;
+
+            Account.Statistics.GamesList.Add(session);
         }
     }
 }

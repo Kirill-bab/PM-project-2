@@ -6,6 +6,7 @@ using Serilog;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace GameWebApplication
@@ -14,7 +15,7 @@ namespace GameWebApplication
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();           
+            CreateHostBuilder(args).Build().Run();    
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
