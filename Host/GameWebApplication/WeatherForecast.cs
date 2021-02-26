@@ -1,7 +1,7 @@
 using System;
 
 namespace GameWebApplication
-{
+{ // add something
     public class WeatherForecast
     {
         public DateTime Date { get; set; }

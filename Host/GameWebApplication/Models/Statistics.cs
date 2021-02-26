@@ -7,7 +7,12 @@ namespace GameWebApplication.Models
 {
     public class Statistics : IStatistics
     {
-        public List<Session> GamesList { get; set; }
-        public int MyProperty { get; set; }
+        public List<Session> SessionsList { get; set; }
+        public string TotalTimeInGame { get; set; }
+        public Statistics()
+        {
+            TotalTimeInGame = TimeSpan.Zero.ToString();
+        }
     }
 }
+

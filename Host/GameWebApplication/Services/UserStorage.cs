@@ -26,11 +26,15 @@ namespace GameWebApplication.Services
 
         public Task BanUser(IUserDto user)
         {
-            lock (_bannedUsersLockObj) 
+            new Timer(callback => { UnBanUser(user); }, null, 120_000, Timeout.Infinite);
+            return Task.Run(() =>
             {
-                new Timer(callback => { UnBanUser(user); }, null, 120_000, Timeout.Infinite);
-                return Task.Run(() => _bannedUsers.Add(user.Account.Login));
-            }
+                lock (_bannedUsersLockObj)
+                {
+                    _bannedUsers.Add(user.Account.Login);
+                }
+                _logger.LogInformation($"user {user.Account.Login} banned for 3 minutes!");
+            });
         }
 
         public Task<bool> CheckIfUserBanned(IUserDto user)
@@ -39,11 +43,17 @@ namespace GameWebApplication.Services
         }
         public Task DisactivateUser(IUserDto user)
         {
-            lock (_usersLockObj)
+            return Task.Run(() =>
             {
-                return Task.Run(() =>
-                _users.Find(u => u.Account.Login == user.Account.Login).Disactivate());
-            }
+                IUserDto us;
+                lock (_usersLockObj)
+                {
+                    us = _users.Find(u => u.Account.Login == user.Account.Login);
+                }
+                us.Disactivate();
+                _logger.LogInformation($"user {us.Account.Login} disactivated!");
+            });
+            
         }
 
         public List<IUserDto> GetUsers()
@@ -53,6 +63,7 @@ namespace GameWebApplication.Services
 
         public void InitializeUserList(string json)
         {
+            _logger.LogInformation("INITIALIZATION STARTED!");
             var usersAccounts = JsonSerializer.Deserialize<List<UserAccount>>(json, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -61,24 +72,47 @@ namespace GameWebApplication.Services
             foreach (var user in usersAccounts)
             {
                 _users.Add(new UserDto(user));
+                _logger.LogInformation($"user {user.Login} initialized!");
             }
+            _logger.LogInformation("INITIALIZATION ENDED!");
         }
-
+        
         public Task UnBanUser(IUserDto user)
         {
-            return Task.Run(() => _bannedUsers.Remove(user.Account.Login));
+            return Task.Run(() =>
+            {
+                lock (_bannedUsersLockObj)
+                {
+                    _bannedUsers.Remove(user.Account.Login);
+                }
+                _logger.LogInformation($"user {user.Account.Login} is unbanned!");
+            });
         }
 
-        Task IUserStorage.ActivateUser(IUserDto user)
+        public Task<string> TryAuthorizeUser(string login, string password)
         {
-            return Task.Run(() => _users
-            .Find(u => u.Account.Login.Equals(user.Account.Login)).Activate());
-        }
-
-        public Task<bool> TryAuthorizeUser(string login, string password)
-        {
-            return Task.FromResult<bool>(_users.Find(u => u.Account.Login == login &&
-            u.Account.Password == password) != default(IUserDto));
+            return Task.Run<string>(() =>
+            {
+                string answer = "";
+                var match = _users.Find(u => u.Account.Login == login &&
+                 u.Account.Password == password);
+                if ( match != default(IUserDto))
+                {
+                    _logger.LogInformation($"user {login} found on userList!");
+                    lock (_bannedUsersLockObj)
+                    {
+                        if (_bannedUsers.Where(usr => usr == login).Count() != 0)
+                        {
+                            answer = "banned";
+                            _logger.LogInformation($"user {login} found on banned List!");
+                        }
+                        else if (match.IsActive()) answer = "alreadyOnPlatform";
+                        else answer = "ok";
+                    }
+                    return answer;
+                }
+                return "notFound";
+            });
         }
 
         public Task<IUserDto> GetUser(string login)
@@ -99,6 +133,21 @@ namespace GameWebApplication.Services
                 }
                 return true;
             });
+        }
+
+        public Task<IStatistics[]> GetGlobalStatistics()
+        {
+            return Task.Run(() =>
+            {
+                IStatistics[] globalStats;
+                lock (_usersLockObj)
+                {
+                    globalStats = _users
+                    .Where(u => u.Account.Statistics.SessionsList.Count > 10)
+                    .Select(u => u.Account.Statistics).ToArray();
+                }
+                return globalStats;
+            });      
         }
     }
 }

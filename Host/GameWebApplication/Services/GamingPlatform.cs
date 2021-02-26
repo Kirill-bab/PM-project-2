@@ -15,7 +15,7 @@ namespace GameWebApplication.Services
         private readonly ILogger<GamingPlatform> _logger;
         private readonly IMatchmaker _matchmaker;
         private readonly IUserStorage _userStorage;
-        private readonly Queue<IUserDto> _waitList;
+        private readonly List<IUserDto> _waitList = new List<IUserDto>();
         private readonly object _queueLockObj = new object();
         private readonly List<PrivateSession> _privateSessions = new List<PrivateSession>(0);
         private readonly object _privateLockObj = new object();
@@ -32,6 +32,12 @@ namespace GameWebApplication.Services
            await _userStorage.BanUser( await _userStorage.GetUser(login));
         }
 
+        public async Task ConfirmUserConnection(string login)
+        {
+            var user = await _userStorage.GetUser(login);
+            if (user.IsActive()) user.Connect();
+        }
+
         public Task<bool> ConnectToPrivateSessionAsync(string login, string gameKey)
         {
             return Task.Run(async () =>
@@ -40,7 +46,7 @@ namespace GameWebApplication.Services
                  if (session != default(PrivateSession))
                  {
                      session.Player2 = login;
-                     await _matchmaker.StartRegularSesionAsync(await _userStorage.GetUser(login),
+                     _matchmaker.StartRegularSesionAsync(await _userStorage.GetUser(login),
                          await _userStorage.GetUser(session.Player1));
                      return true;
                  }
@@ -48,18 +54,23 @@ namespace GameWebApplication.Services
              });
         }
 
-        public async Task<bool> ConnectUserAsync(string login, string password)
+        public async Task<string> ConnectUserAsync(string login, string password)
         {
-            var isRealUser =  await _userStorage.TryAuthorizeUser(login, password);
-            if (!isRealUser) return false;
-            (await _userStorage.GetUser(login)).Activate();
-            return true;
+            var result =  await _userStorage.TryAuthorizeUser(login, password);
+            if (result == "ok") (await _userStorage.GetUser(login)).Activate();
+            return result;
         }
 
         public async Task DisconnectUserAsync(string login)
         {
+            if ((await _userStorage.GetUser(login)).IsInQueue)
+                await StopSearch(login);
             (await _userStorage.GetUser(login)).Disactivate();
-            await StopSearch(login);
+        }
+
+        public async Task<IStatistics[]> GetGlobalStatistics()
+        {
+            return await _userStorage.GetGlobalStatistics();
         }
 
         public async Task<IStatistics> GetUserStatistics(string login)
@@ -70,6 +81,11 @@ namespace GameWebApplication.Services
         public void InitializeUserStorage()
         {
             _userStorage.InitializeUserList(FileWorker.Read("users.json"));
+        }
+
+        public async Task<bool> IsInGame(string login)
+        {
+            return await Task.FromResult((await _userStorage.GetUser(login)).IsInGame());
         }
 
         public async Task<bool> RegisterUserAsync(string login, string password)
@@ -86,7 +102,7 @@ namespace GameWebApplication.Services
 
         public async Task StartAISessionAsync(string login)
         {
-            await _matchmaker.StartAISesionAsync(await _userStorage.GetUser(login));
+            _matchmaker.StartAISesionAsync(await _userStorage.GetUser(login));
         }
 
         public Task<string> StartPrivateSessionAsync(string login)
@@ -109,7 +125,8 @@ namespace GameWebApplication.Services
                 var user = await _userStorage.GetUser(login);
                 lock (_queueLockObj)
                 {
-                    _waitList.Enqueue(user);
+                    _waitList.Add(user);
+                    user.IsInQueue = true;
                 }
             });
         }
@@ -118,21 +135,9 @@ namespace GameWebApplication.Services
         {
             return Task.Run(() =>
             {
-                var stack = new Stack<IUserDto>();
                 lock (_queueLockObj)
                 {
-                    while(_waitList.Count > 0 || _waitList.Peek().Account.Login != login)
-                    {
-                        stack.Push(_waitList.Dequeue());
-                    }
-                    if(_waitList.TryPeek(out _))
-                    {
-                        _waitList.Dequeue();
-                        while(stack.Count > 0)
-                        {
-                            _waitList.Enqueue(stack.Pop());
-                        }
-                    }
+                    _waitList.Remove(_waitList.Find(u => u.Account.Login == login));
                 }
             });
         }
@@ -149,10 +154,23 @@ namespace GameWebApplication.Services
                         IUserDto user2;
                         lock (_queueLockObj)
                         {
-                            user1 = _waitList.Dequeue();
-                            user2 = _waitList.Dequeue();      
-                        }
-                        _matchmaker.StartRegularSesionAsync(user1,user2);
+                            user1 = _waitList[0];
+                            user2 = _waitList[1];
+                            if (!user1.IsActive())
+                            {
+                                _waitList.Remove(user1);
+                            }
+                            else if (!user2.IsActive())
+                            {
+                                _waitList.Remove(user2);
+                            }
+                            else
+                            {
+                                _waitList.RemoveAt(0);
+                                _waitList.RemoveAt(0);
+                                _matchmaker.StartRegularSesionAsync(user1, user2);
+                            }
+                        } 
                     }
                 }
             });

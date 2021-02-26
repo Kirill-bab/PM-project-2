@@ -24,6 +24,7 @@ namespace GameWebApplication.Models
         public void EnterGame();
         public void ExitGame();
         public bool IsInGame();
+        public bool IsInQueue { get; set; }
         public CancellationTokenSource CurrentGame();
         //public void ResetCancellationToken();
     }

@@ -1,3 +1,4 @@
+using GameWebApplication.Abstractions;
 using GameWebApplication.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -40,7 +41,12 @@ namespace GameWebApplication
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameWebApplication", Version = "v1" });
             });
 
+            services.AddTransient<ILoggerFactory, LoggerFactory>();
             services.AddHostedService<UserConnectionValidator>();
+            services.AddSingleton<IUserStorage, UserStorage>();
+            services.AddTransient<IGamePerformer, GamePerformer>();
+            services.AddTransient<IMatchmaker, Matchmaker>();
+            services.AddSingleton<IGamingPlatform, GamingPlatform>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

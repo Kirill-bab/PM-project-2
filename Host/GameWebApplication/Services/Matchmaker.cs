@@ -17,10 +17,10 @@ namespace GameWebApplication.Services
             _gamePerformer = gamePerformer;
             _logger = loggerFactory.CreateLogger<Matchmaker>();
         }
-        public async Task StartAISesionAsync(IUserDto user)
+        public void StartAISesionAsync(IUserDto user)
         {
             //I used Task.Run instead of TaskFactory.StartNew to reuse threads in thread pool 
-             await Task.Run(async () =>
+            Task.Run(async () =>
             {
                 user.EnterGame();
                 bool timeoutHasCome = false;
@@ -67,9 +67,9 @@ namespace GameWebApplication.Services
             });
         }
 
-        public async Task StartRegularSesionAsync(IUserDto user1, IUserDto user2)
+        public void StartRegularSesionAsync(IUserDto user1, IUserDto user2)
         {
-            await Task.Run(async () =>
+            Task.Run(async () =>
             {
                 user1.EnterGame();
                 user2.EnterGame();
