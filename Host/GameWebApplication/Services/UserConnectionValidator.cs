@@ -26,7 +26,7 @@ namespace GameWebApplication.Services
         {
             return Task.Run(() =>
             {
-                var timer = new Timer(Callback, null, 0, 3000);
+                var timer = new Timer(Callback, null, 0, 4000);
                 while (true)
                 {
                     if (stoppingToken.IsCancellationRequested) break;
@@ -41,6 +41,7 @@ namespace GameWebApplication.Services
                 if (!u.CheckForConnection())
                 {
                     await _gamingPlatform.DisconnectUserAsync(u.Account.Login);
+                    _logger.LogInformation($"user {u.Account.Login} disconnected due to timeout!");
                 }
                 else
                 {

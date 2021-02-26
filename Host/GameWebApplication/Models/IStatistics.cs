@@ -9,5 +9,6 @@ namespace GameWebApplication.Models
     public interface IStatistics
     {
         public List<Session> SessionsList { get; set; }
+        public string TotalTimeInGame{ get; set; }
     }
 }

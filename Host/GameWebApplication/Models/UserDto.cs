@@ -21,6 +21,8 @@ namespace GameWebApplication.Models
                 _isActive = value;
             }
         }
+        public bool IsInQueue { get; set; }
+
         private bool _isReadyForNextRound;
         private bool _isActive;
         private Figure _currentFigure;
@@ -28,7 +30,7 @@ namespace GameWebApplication.Models
         private bool _isConnected;
         private CancellationTokenSource _currentGame;
         private bool _isInGame;
-        private TimeSpan _userTimeInGame => TimeSpan.Parse(this.Account.TimeInGame);
+        private TimeSpan _userTimeInGame => TimeSpan.Parse(this.Account.Statistics.TotalTimeInGame);
 
         public UserDto()
         {
@@ -39,6 +41,7 @@ namespace GameWebApplication.Models
             _isReadyForNextRound = false;
             _isConnected = false;
             _isInGame = false;
+            IsInQueue = false;
         }
 
         public UserDto(UserAccount account)
@@ -51,6 +54,7 @@ namespace GameWebApplication.Models
             _isConnected = false;
             _currentGame = new CancellationTokenSource();
             _isInGame = false;
+            IsInQueue = false;
         }
         public void SetReady()
         {
@@ -74,6 +78,7 @@ namespace GameWebApplication.Models
                 IsActive = true;
                 _currentPeriodTime.Start();
                 _isReadyForNextRound = true;
+                IsInQueue = false;
             }
         }
         public Figure GetCurrentFigure()
@@ -98,7 +103,7 @@ namespace GameWebApplication.Models
             {
                 IsActive = false;
                 _currentPeriodTime.Stop();
-                this.Account.TimeInGame = (_currentPeriodTime.Elapsed + _userTimeInGame).ToString();
+                this.Account.Statistics.TotalTimeInGame = (_currentPeriodTime.Elapsed + _userTimeInGame).ToString();
                 _isReadyForNextRound = false;
                 _isConnected = false;
                 _isInGame = false;
@@ -151,5 +156,6 @@ namespace GameWebApplication.Models
         {
             return _isInGame;
         }
+
     }
 }

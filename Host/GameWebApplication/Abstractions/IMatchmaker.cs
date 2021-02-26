@@ -6,7 +6,7 @@ namespace GameWebApplication.Abstractions
 {
     public interface IMatchmaker
     { 
-        public Task StartRegularSesionAsync(IUserDto user1, IUserDto user2);
-        public Task StartAISesionAsync(IUserDto user);
+        public void StartRegularSesionAsync(IUserDto user1, IUserDto user2);
+        public void StartAISesionAsync(IUserDto user);
     }
 }
