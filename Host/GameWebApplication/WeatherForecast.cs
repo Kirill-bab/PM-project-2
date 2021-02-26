@@ -3,7 +3,7 @@ using System;
 namespace GameWebApplication
 {
     public class WeatherForecast
-    {
+    {// something
         public DateTime Date { get; set; }
 
         public int TemperatureC { get; set; }
