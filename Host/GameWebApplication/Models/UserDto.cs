@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GameWebApplication.Models
 {
     public class UserDto : IUserDto
     {
-        public IUserAccount Account { get; set; }
+        public UserAccount Account { get; set; }
         public bool IsActive
         {
             get
@@ -22,21 +23,25 @@ namespace GameWebApplication.Models
         }
         private bool _isReadyForNextRound;
         private bool _isActive;
-        private readonly Figure _currentFigure;
-        private Stopwatch _currentPeriodTime;
+        private Figure _currentFigure;
+        private readonly Stopwatch _currentPeriodTime;
         private bool _isConnected;
+        private CancellationTokenSource _currentGame;
+        private bool _isInGame;
         private TimeSpan _userTimeInGame => TimeSpan.Parse(this.Account.TimeInGame);
 
         public UserDto()
         {
+            _currentGame = new CancellationTokenSource();
             IsActive = false;
             _currentFigure = Figure.None;
             _currentPeriodTime = new Stopwatch();
             _isReadyForNextRound = false;
             _isConnected = false;
+            _isInGame = false;
         }
 
-        public UserDto(IUserAccount account)
+        public UserDto(UserAccount account)
         {
             Account = account ?? throw new ArgumentNullException(nameof(account));
             IsActive = false;
@@ -44,12 +49,19 @@ namespace GameWebApplication.Models
             _currentPeriodTime = new Stopwatch();
             _isReadyForNextRound = false;
             _isConnected = false;
+            _currentGame = new CancellationTokenSource();
+            _isInGame = false;
         }
         public void SetReady()
         {
             _isReadyForNextRound = true;
         }
 
+        public void ResetReady()
+        {
+            _isReadyForNextRound = false;
+            ResetCancellationToken();
+        }
         public bool IsReadyForNextRound()
         {
             return _isReadyForNextRound;
@@ -89,6 +101,8 @@ namespace GameWebApplication.Models
                 this.Account.TimeInGame = (_currentPeriodTime.Elapsed + _userTimeInGame).ToString();
                 _isReadyForNextRound = false;
                 _isConnected = false;
+                _isInGame = false;
+                _currentGame.Cancel();
             }
         }
 
@@ -105,6 +119,37 @@ namespace GameWebApplication.Models
         bool IUserDto.IsActive()
         {
             return IsActive;
+        }
+
+        public void ChangeCurrentFigure(Figure fig)
+        {
+            _currentFigure = fig;
+            SetReady();
+        }
+
+        public CancellationTokenSource CurrentGame()
+        {
+            return _currentGame;
+        }
+
+        private void ResetCancellationToken()
+        {
+            _currentGame = new CancellationTokenSource();
+        }
+
+        public void EnterGame()
+        {
+            _isInGame = true;
+        }
+
+        public void ExitGame()
+        {
+            _isInGame = false;
+        }
+
+        public bool IsInGame()
+        {
+            return _isInGame;
         }
     }
 }

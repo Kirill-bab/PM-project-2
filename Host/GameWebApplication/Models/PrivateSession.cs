@@ -8,16 +8,12 @@ namespace GameWebApplication.Models
 {
     public class PrivateSession : Session
     {
-        public Guid GameKey { get; private set; }
+        public string GameKey { get; private set; }
 
         public PrivateSession(string player1, string player2) : base( player1, player2)
         {
-            GameKey = Guid.NewGuid();
+            GameKey = Guid.NewGuid().ToString().Take(5).ToString();
         }
         
-        public override string ToString()
-        {
-            return base.ToString() + TableBuilder.AlignCentre(GameKey.ToString(), 20);
-        }
     }
 }

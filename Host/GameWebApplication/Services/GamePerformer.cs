@@ -3,24 +3,29 @@ using GameWebApplication.Abstractions;
 using System.Threading.Tasks;
 using System.Threading;
 using GameWebApplication.Models;
-
+using Microsoft.Extensions.Logging;
 
 namespace GameWebApplication.Services
 {
     public class GamePerformer : IGamePerformer
     {
-        private static readonly TaskFactory _factory = new TaskFactory();
+        private readonly ILogger<GamePerformer> _logger;
 
-        public Task<Round> StartRoundWithPlayerAsync(IUserDto user1, IUserDto user2, 
-            CancellationToken ct, CancellationToken timeoutCt)
+        public GamePerformer(ILoggerFactory loggerFactory)
         {
-            return _factory.StartNew<Round>(() =>
+            _logger = loggerFactory.CreateLogger<GamePerformer>();
+        }
+        public Task<Round> StartRoundWithPlayerAsync(IUserDto user1, IUserDto user2, 
+            CancellationToken user1Ct, CancellationToken user2Ct, CancellationToken timeoutCt)
+        {
+            return Task.Run(() =>
             {
                 while (user1.GetCurrentFigure() == Figure.None ||
                 user2.GetCurrentFigure() == Figure.None)
                 {
-                    ct.ThrowIfCancellationRequested();
-                    if (timeoutCt.IsCancellationRequested) return null;
+                    user1Ct.ThrowIfCancellationRequested();
+                    user2Ct.ThrowIfCancellationRequested();
+                    if (timeoutCt.IsCancellationRequested) throw new TimeoutException(nameof(timeoutCt));
                 }
 
                 var result = CheckForWinner(user1.GetCurrentFigure(), user2.GetCurrentFigure());
@@ -47,12 +52,12 @@ namespace GameWebApplication.Services
                         };
                 }
                 return default;
-            }, ct);
+            }, timeoutCt);
         }
 
         public Task<Round> StartRoundWithAIAsync(IUserDto user, CancellationToken ct, CancellationToken timeoutCt)
         {
-            return _factory.StartNew<Round>(() =>
+            return Task.Run(() =>
             {
                 var aiFigure = new AIPlayer().GetRandomFigure();
                 while (user.GetCurrentFigure() == Figure.None)
@@ -85,7 +90,7 @@ namespace GameWebApplication.Services
                         };
                 }
                 return default;
-            }, ct);
+            }, timeoutCt);
         }
 
         private int CheckForWinner(Figure figure1, Figure figure2)

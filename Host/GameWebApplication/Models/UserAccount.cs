@@ -16,6 +16,13 @@ namespace GameWebApplication.Models
         {
 
         }
+        public UserAccount(string login, string password)
+        {
+            Login = login ?? throw new ArgumentNullException(nameof(login));
+            Password = password ?? throw new ArgumentNullException(nameof(password));
+            Statistics = new Statistics();
+            TimeInGame = TimeSpan.Zero.ToString();
+        }
         public UserAccount(string login, string password, IStatistics statistics, string timeInGame)
         {
             Login = login ?? throw new ArgumentNullException(nameof(login));

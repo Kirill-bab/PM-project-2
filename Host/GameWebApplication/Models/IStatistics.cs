@@ -9,6 +9,5 @@ namespace GameWebApplication.Models
     public interface IStatistics
     {
         public List<Session> SessionsList { get; set; }
-        public int MyProperty { get; set; }
     }
 }

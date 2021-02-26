@@ -3,16 +3,20 @@ using System.Threading.Tasks;
 
 namespace GameWebApplication.Abstractions
 {
-    interface IGamingPlatform
+    public interface IGamingPlatform
     { // + userStorage + matchmaker + logger
         //+ RandomSessionQueue + PrivateSessionsList
-        public Task ConnectUserAsync(IUserDto user);
-        public Task DisconnectUserAsync(IUserDto user);
-        public Task StartRandomSessionAsync(IUserDto user1);
-        public Task StartPrivateSessionAsync(IUserDto user);
-        public Task StartAISessionAsync(IUserDto user);
+        public Task<bool> ConnectUserAsync(string login, string password);
+        public Task<bool> RegisterUserAsync(string login, string password);
+        public Task DisconnectUserAsync(string login);
+        public Task StopSearch(string login);
+        public Task BanUser(string login);
+        public Task StartRandomSessionAsync(string login);
+        public Task<string> StartPrivateSessionAsync(string login);
+        public Task<bool> ConnectToPrivateSessionAsync(string login, string gameKey);
+        public Task StartAISessionAsync(string login);
         public void InitializeUserStorage();
         public void SaveStorage();
-        public Task GetUserStatistics(IUserDto user);
+        public Task<IStatistics> GetUserStatistics(string login);
     }
 }

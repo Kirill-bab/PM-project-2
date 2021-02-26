@@ -14,6 +14,9 @@ namespace GameWebApplication.Abstractions
         public Task UnBanUser(IUserDto user);
         public List<IUserDto> GetUsers();
         public void InitializeUserList(string json);
-        public Task<bool> CheckIfUserBanned(IUserDto user); 
+        public Task<bool> CheckIfUserBanned(IUserDto user);
+        public Task<bool> TryAuthorizeUser(string login, string password);
+        public Task<IUserDto> GetUser(string login);
+        public Task<bool> AddUser(string login, string password);
     }
 }

@@ -9,24 +9,25 @@ namespace GameWebApplication.Services
 {
     public class Matchmaker : IMatchmaker
     {
-        private IGamePerformer _gamePerformer; //DI
-        private ILogger<Matchmaker> _logger; // DI loggerFactory
+        private IGamePerformer _gamePerformer; 
+        private ILogger<Matchmaker> _logger; 
 
         public Matchmaker(IGamePerformer gamePerformer, ILoggerFactory loggerFactory)
         {
             _gamePerformer = gamePerformer;
             _logger = loggerFactory.CreateLogger<Matchmaker>();
         }
-        public async Task StartAISesionAsync(IUserDto user, CancellationToken ct)
+        public async Task StartAISesionAsync(IUserDto user)
         {
             //I used Task.Run instead of TaskFactory.StartNew to reuse threads in thread pool 
              await Task.Run(async () =>
             {
+                user.EnterGame();
                 bool timeoutHasCome = false;
                 var timer = new Timer(Callback => { timeoutHasCome = true; }, null, 300_000,
                     Timeout.Infinite);
                 var session = new Session(user.Account.Login, "computer");
-                while (!ct.IsCancellationRequested)
+                while (true)
                 { 
                     try
                     {
@@ -41,33 +42,42 @@ namespace GameWebApplication.Services
                             }
                         }
 
-                        var round = await _gamePerformer.StartRoundWithAIAsync(user, ct,
+                        var round = await _gamePerformer.StartRoundWithAIAsync(user, 
+                            user.CurrentGame().Token, 
                             new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
+                        
 
                         if (round != null) session.Rounds.Add(round);
                     }
-                    catch (TaskCanceledException)
+                    catch (TaskCanceledException e)
                     {
+                        user.ResetReady();
+                        user.ExitGame();
+
                         if (session.Rounds.Count == 0) return;
                         session.EndingReason = "user quited session";
                         user.RegisterNewSession(session);
                         return;
                     }
-                 }
+                    catch (TimeoutException)
+                    {
+                        continue;
+                    }
+                }
             });
         }
 
-
-        public async Task StartRegularSesionAsync(IUserDto user1, IUserDto user2,
-            CancellationToken ct)
+        public async Task StartRegularSesionAsync(IUserDto user1, IUserDto user2)
         {
             await Task.Run(async () =>
             {
+                user1.EnterGame();
+                user2.EnterGame();
                 bool timeoutHasCome = false;
                 var timer = new Timer(Callback => { timeoutHasCome = true; }, null, 300_000,
                     Timeout.Infinite);
                 var session = new Session(user1.Account.Login, user2.Account.Login);
-                while (!ct.IsCancellationRequested)
+                while (true)
                 {
                     try
                     {
@@ -84,18 +94,30 @@ namespace GameWebApplication.Services
                         }
 
                         var round = await _gamePerformer.StartRoundWithPlayerAsync(user1, user2,
-                            ct, new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
+                            user1.CurrentGame().Token, user2.CurrentGame().Token,
+                            new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
 
                         if (round != null) session.Rounds.Add(round);
                     }
-                    catch (TaskCanceledException)
+                    catch (OperationCanceledException e)        // maybe here
                     {
+                        user1.ResetReady();
+                        user2.ResetReady();
+                        user1.ExitGame();
+                        user2.ExitGame();
+
                         if (session.Rounds.Count == 0) return;
                         session.EndingReason = "user quited session";
                         user1.RegisterNewSession(session);
                         user2.RegisterNewSession(session);
                         return;
                     }
+                    catch (TimeoutException)
+                    {
+                        continue;
+                    }
+                    user1.ResetReady();
+                    user2.ResetReady();
                 }
             });
         }
