@@ -42,6 +42,7 @@ namespace GameWebApplication
             });
 
             services.AddTransient<ILoggerFactory, LoggerFactory>();
+            services.AddHostedService<StorageWorker>();
             services.AddHostedService<UserConnectionValidator>();
             services.AddSingleton<IUserStorage, UserStorage>();
             services.AddTransient<IGamePerformer, GamePerformer>();

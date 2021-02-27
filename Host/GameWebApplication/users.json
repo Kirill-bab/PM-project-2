@@ -1,0 +1,26 @@
+[
+  {
+    "login": "someLogin",
+    "password": "somePassword",
+    "statistics": {
+      "sessionsList": [],
+      "totalTimeInGame": "00:00:00"
+    }
+  },
+  {
+    "login": "someAnotherLogin",
+    "password": "somePassword",
+    "statistics": {
+      "sessionsList": [],
+      "totalTimeInGame": "00:00:00"
+    }
+  },
+  {
+    "login": "Mike",
+    "password": "pipopu",
+    "statistics": {
+      "sessionsList": [],
+      "totalTimeInGame": "00:00:00"
+    }
+  }
+]
