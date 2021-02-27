@@ -78,11 +78,6 @@ namespace GameWebApplication.Services
             return (await _userStorage.GetUser(login)).Account.Statistics;
         }
 
-        public void InitializeUserStorage()
-        {
-            _userStorage.InitializeUserList(FileWorker.Read("users.json"));
-        }
-
         public async Task<bool> IsInGame(string login)
         {
             return await Task.FromResult((await _userStorage.GetUser(login)).IsInGame());
@@ -91,13 +86,6 @@ namespace GameWebApplication.Services
         public async Task<bool> RegisterUserAsync(string login, string password)
         {
             return await _userStorage.AddUser(login, password);
-        }
-
-        public void SaveStorage()
-        {
-            FileWorker.Write("users.json", JsonSerializer
-                .Serialize<List<UserAccount>>(_userStorage
-                .GetUsers().Select(u => u.Account).ToList()));
         }
 
         public async Task StartAISessionAsync(string login)

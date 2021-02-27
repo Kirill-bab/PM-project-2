@@ -17,8 +17,6 @@ namespace GameWebApplication.Abstractions
         public Task<string> StartPrivateSessionAsync(string login);
         public Task<bool> ConnectToPrivateSessionAsync(string login, string gameKey);
         public Task StartAISessionAsync(string login);
-        public void InitializeUserStorage();
-        public void SaveStorage();
         public Task<IStatistics> GetUserStatistics(string login);
         public Task<IStatistics[]> GetGlobalStatistics();
         public Task ConfirmUserConnection(string login);

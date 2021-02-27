@@ -12,6 +12,7 @@ namespace GameWebApplication.Models
         public Statistics()
         {
             TotalTimeInGame = TimeSpan.Zero.ToString();
+            SessionsList = new List<Session>();
         }
     }
 }

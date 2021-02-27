@@ -131,6 +131,7 @@ namespace GameWebApplication.Services
                 {
                     _users.Add(new UserDto(new UserAccount(login, password)));
                 }
+                _logger.LogInformation($"user {login} registered!");
                 return true;
             });
         }

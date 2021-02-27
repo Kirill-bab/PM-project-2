@@ -116,7 +116,7 @@ namespace GameWebApplication.Controllers
         [Route("stats/global")]
         public async Task<IActionResult> GetGlobalStats()
         {
-            return Ok( await _gamingPlatform.GetGlobalStatistics()); 
+            return Ok(await _gamingPlatform.GetGlobalStatistics()); 
         }
         [HttpGet]
         [Route("confirm/connection")]
