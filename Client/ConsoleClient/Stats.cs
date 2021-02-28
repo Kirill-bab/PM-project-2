@@ -45,6 +45,17 @@ namespace ConsoleClient
                         "You won"
                         };
                     }
+                    else if(userStats.SessionsList[session].Rounds[i].Winner == "draw")
+                    {
+                        sessionArray[i] = new string[]
+                       {
+                        userStats.SessionsList[session].Rounds[i].Winner,
+                        userStats.SessionsList[session].Rounds[i].Looser,
+                        userStats.SessionsList[session].Rounds[i].WinnerFigure.ToString(),
+                        userStats.SessionsList[session].Rounds[i].LooserFigure.ToString(),
+                        "Draw"
+                       };
+                    }
                     else
                     {
                         sessionArray[i] = new string[]
