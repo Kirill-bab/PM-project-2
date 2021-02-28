@@ -92,10 +92,15 @@ namespace GameWebApplication.Services
 
         public async Task DisconnectUserAsync(string login)
         {
-            if ((await _userStorage.GetUser(login)).IsInQueue)
-                await StopSearch(login);
+            await Task.Run(async () =>
+            {
+                if ((await _userStorage.GetUser(login)).IsInQueue)
+                {
+                    await StopSearch(login);
+                }
             (await _userStorage.GetUser(login)).Disactivate();
-            _logger.LogWarning($"user {login} disconnected from platform");
+                _logger.LogWarning($"user {login} disconnected from platform");
+            });
         }
 
         public async Task<Statistics[]> GetGlobalStatistics()
@@ -174,6 +179,7 @@ namespace GameWebApplication.Services
                 {
                     _waitList.Remove(_waitList.Find(u => u.Account.Login == login));
                 }
+                _logger.LogWarning($"user {login} exited search queue!");
             });
         }
 

@@ -3,8 +3,23 @@
     "login": "login",
     "password": "password",
     "statistics": {
-      "sessionsList": [],
-      "totalTimeInGame": "00:07:04.3971628"
+      "sessionsList": [
+        {
+          "player1": "mike",
+          "player2": "login",
+          "endingReason": "user quited session",
+          "rounds": [
+            {
+              "winner": "login",
+              "looser": "mike",
+              "winnerFigure": 1,
+              "looserFigure": 2
+            }
+          ],
+          "startedAt": "28.02.2021 10:30:54"
+        }
+      ],
+      "totalTimeInGame": "00:19:17.4729085"
     }
   },
   {
@@ -19,8 +34,23 @@
     "login": "mike",
     "password": "11111111",
     "statistics": {
-      "sessionsList": [],
-      "totalTimeInGame": "00:06:28.5968454"
+      "sessionsList": [
+        {
+          "player1": "mike",
+          "player2": "login",
+          "endingReason": "user quited session",
+          "rounds": [
+            {
+              "winner": "login",
+              "looser": "mike",
+              "winnerFigure": 1,
+              "looserFigure": 2
+            }
+          ],
+          "startedAt": "28.02.2021 10:30:54"
+        }
+      ],
+      "totalTimeInGame": "00:14:28.0002987"
     }
   }
 ]

@@ -193,6 +193,7 @@ namespace GameWebApplication.Controllers
         {
             return Task.Run<IActionResult>(async () =>
             {
+                _logger.LogWarning($"MakeTurn called by {login}");
                 Figure fig = Figure.None;
                 switch (figure)
                 {
@@ -200,10 +201,10 @@ namespace GameWebApplication.Controllers
                         fig = Figure.Rock;
                         break;
                     case "paper":
-                        fig = Figure.Rock;
+                        fig = Figure.Paper;
                         break;
                     case "scissors":
-                        fig = Figure.Rock;
+                        fig = Figure.Scissors;
                         break;
                     default:
                         return BadRequest();

@@ -18,13 +18,17 @@ namespace GameWebApplication.Services
         public async Task<Round> StartRoundWithPlayerAsync(IUserDto user1, IUserDto user2, 
             CancellationToken user1Ct, CancellationToken user2Ct, CancellationToken timeoutCt)
         {
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
                 user1.StartRound();
                 user2.StartRound();
+
+                _logger.LogWarning($"Waiting for users {user1.Account.Login}" +
+                        $" and {user2.Account.Login} turns");
                 while (user1.GetCurrentFigure() == Figure.None ||
                 user2.GetCurrentFigure() == Figure.None)
                 {
+                    
                     if (user1Ct.IsCancellationRequested || user2Ct.IsCancellationRequested)
                     {
                         user1.EndRound();
@@ -34,32 +38,42 @@ namespace GameWebApplication.Services
 
                     if (timeoutCt.IsCancellationRequested) return default;
                 }
+                _logger.LogWarning($"Users {user1.Account.Login} " +
+                    $"and {user2.Account.Login} have chosen figures {user1.GetCurrentFigure()}" +
+                    $"and {user2.GetCurrentFigure()}!");
 
                 var result = CheckForWinner(user1.GetCurrentFigure(), user2.GetCurrentFigure());
-                
+
                 user1.EndRound();
                 user2.EndRound();
 
+                await Task.Delay(1000);
                 switch (result)
                 {
                     case 1:
                         {
+                            _logger.LogWarning($"Player {user1.Account.Login} won!");
                             user1.LastRoundResult = "victory";
                             user2.LastRoundResult = "defeat";
                             return new Round
                             {
-                                Winner = (user1.Account.Login, user1.GetCurrentFigure()),
-                                Looser = (user2.Account.Login, user2.GetCurrentFigure())
+                                Winner = (user1.Account.Login),
+                                Looser = user2.Account.Login,
+                                WinnerFigure = user1.GetCurrentFigure(),
+                                LooserFigure = user2.GetCurrentFigure()
                             };
                         }
                     case 2:
                         {
+                            _logger.LogWarning($"Player {user2.Account.Login} won!");
                             user1.LastRoundResult = "defeat";
                             user2.LastRoundResult = "victory";
                             return new Round
                             {
-                                Winner = (user2.Account.Login, user2.GetCurrentFigure()),
-                                Looser = (user1.Account.Login, user1.GetCurrentFigure())
+                                Winner = (user2.Account.Login),
+                                Looser = user1.Account.Login,
+                                WinnerFigure = user2.GetCurrentFigure(),
+                                LooserFigure = user1.GetCurrentFigure()
                             };
                         }
                     case 0:
@@ -68,11 +82,15 @@ namespace GameWebApplication.Services
                             user2.LastRoundResult = "draw";
                             return new Round
                             {
-                                Winner = ("draw", user1.GetCurrentFigure()),
-                                Looser = ("draw", user2.GetCurrentFigure())
+                                Winner = ("draw"),
+                                Looser = ("draw"),
+                                WinnerFigure = user2.GetCurrentFigure(),
+                                LooserFigure = user1.GetCurrentFigure()
                             };
                         }
                 }
+               
+
                 return default;
             }, timeoutCt);
         }
@@ -95,20 +113,20 @@ namespace GameWebApplication.Services
                     case 1:
                         return new Round
                         {
-                            Winner = (user.Account.Login, user.GetCurrentFigure()),
-                            Looser = ("computer", aiFigure)
+                            //Winner = (user.Account.Login, user.GetCurrentFigure()),
+                           // Looser = ("computer", aiFigure)
                         };
                     case 2:
                         return new Round
                         {
-                            Winner = ("computer", aiFigure),
-                            Looser = (user.Account.Login, user.GetCurrentFigure())
+                           // Winner = ("computer", aiFigure),
+                           // Looser = (user.Account.Login, user.GetCurrentFigure())
                         };
                     case 0:
                         return new Round
                         {
-                            Winner = ("draw", default(Figure)),
-                            Looser = ("draw", default(Figure))
+                           // Winner = ("draw", default(Figure)),
+                           // Looser = ("draw", default(Figure))
                         };
                 }
                 return default;

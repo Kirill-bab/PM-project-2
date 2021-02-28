@@ -13,7 +13,8 @@ namespace Library
             PrintLine();
             foreach (var row in input)
             {
-                PrintRow(row);
+                if (row != null)
+                    PrintRow(row);
             }
             PrintLine();
         }
