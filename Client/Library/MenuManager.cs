@@ -4,7 +4,7 @@ namespace Library
 {
     public static class MenuManager
     {
-        private static int Menu(string header, int menuWidth, params string[] options)
+        public static int Menu(string header, int menuWidth, params string[] options)
         {
             Console.Clear();
             int chosen = 0;
@@ -41,7 +41,7 @@ namespace Library
                         if (chosen == options.Length - 1) chosen = 0;
                         else chosen++;
                         break;
-                    case ConsoleKey.Escape: return -1;
+                    //case ConsoleKey.Escape: return -1;
                 }
             }
         }

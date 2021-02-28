@@ -32,10 +32,39 @@ namespace GameWebApplication.Services
            await _userStorage.BanUser( await _userStorage.GetUser(login));
         }
 
-        public async Task ConfirmUserConnection(string login)
+        public async Task ChangeUserFigure(string login, Figure figure)
+        {
+            await Task.Run(async () =>
+            {
+                (await _userStorage.GetUser(login)).ChangeCurrentFigure(figure);
+            });
+        }
+
+        public async Task<bool> CheckIfInQueue(string login)
+        {
+            return (await _userStorage.GetUser(login)).IsInQueue;
+        }
+
+        public async Task<bool> CheckIfInRound(string login)
+        {
+            return await Task.Run(async () =>
+            {
+                return (await _userStorage.GetUser(login)).IsInRound(); 
+            });
+        }
+
+        public async Task<bool> ConfirmUserConnection(string login)
         {
             var user = await _userStorage.GetUser(login);
-            if (user.IsActive()) user.Connect();
+            if (user.IsActive())
+            {
+                user.Connect();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public Task<bool> ConnectToPrivateSessionAsync(string login, string gameKey)
@@ -66,14 +95,23 @@ namespace GameWebApplication.Services
             if ((await _userStorage.GetUser(login)).IsInQueue)
                 await StopSearch(login);
             (await _userStorage.GetUser(login)).Disactivate();
+            _logger.LogWarning($"user {login} disconnected from platform");
         }
 
-        public async Task<IStatistics[]> GetGlobalStatistics()
+        public async Task<Statistics[]> GetGlobalStatistics()
         {
             return await _userStorage.GetGlobalStatistics();
         }
 
-        public async Task<IStatistics> GetUserStatistics(string login)
+        public Task<string> GetLastRoundResult(string login)
+        {
+            return Task.Run(async () =>
+            {
+                return (await _userStorage.GetUser(login)).LastRoundResult;
+            });
+        }
+
+        public async Task<Statistics> GetUserStatistics(string login)
         {
             return (await _userStorage.GetUser(login)).Account.Statistics;
         }
@@ -81,6 +119,14 @@ namespace GameWebApplication.Services
         public async Task<bool> IsInGame(string login)
         {
             return await Task.FromResult((await _userStorage.GetUser(login)).IsInGame());
+        }
+
+        public async Task QuitCurrentGame(string login)
+        {
+            await Task.Run(async () =>
+            {
+                (await _userStorage.GetUser(login)).ExitGame();
+            });
         }
 
         public async Task<bool> RegisterUserAsync(string login, string password)
@@ -115,6 +161,7 @@ namespace GameWebApplication.Services
                 {
                     _waitList.Add(user);
                     user.IsInQueue = true;
+                    _logger.LogWarning($"user {user.Account.Login} entered Queue!");
                 }
             });
         }
@@ -132,7 +179,7 @@ namespace GameWebApplication.Services
 
         private Task FindOponentService()
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 while (true)
                 {
@@ -155,11 +202,16 @@ namespace GameWebApplication.Services
                             else
                             {
                                 _waitList.RemoveAt(0);
-                                _waitList.RemoveAt(0);
-                                _matchmaker.StartRegularSesionAsync(user1, user2);
+                                _waitList.RemoveAt(0);                                
                             }
-                        } 
+                        }
+                        user1.IsInQueue = false;
+                        user2.IsInQueue = false;
+                        _matchmaker.StartRegularSesionAsync(user1, user2);
+                        _logger.LogWarning($"Users {user1.Account.Login} " +
+                            $"and {user2.Account.Login} started game session!");
                     }
+                    await Task.Delay(3000);
                 }
             });
         }

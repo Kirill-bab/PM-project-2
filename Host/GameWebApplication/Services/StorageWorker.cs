@@ -37,7 +37,7 @@ namespace GameWebApplication.Services
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 }));
             
-            _logger.LogInformation("USER STORAGE SAVED!");
+            _logger.LogWarning("USER STORAGE SAVED!");
 
             return Task.CompletedTask;
         }
