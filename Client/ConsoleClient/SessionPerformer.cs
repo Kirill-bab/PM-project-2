@@ -215,6 +215,7 @@ namespace ConsoleClient
                     "Play Random Game",
                     "Create Private Room",
                     "Connect To Private Room",
+                    "Play game with AI",
                      "See Global Stats",
                     "Exit Platform"
                     });
@@ -250,12 +251,19 @@ namespace ConsoleClient
                         }
                     case 4:
                         {
-                            GetGlobalStats();
+                            StartGameWithAI();
                             Console.WriteLine("\n Press any key to continue...");
                             Console.ReadKey(true);
                             break;
                         }
                     case 5:
+                        {
+                            GetGlobalStats();
+                            Console.WriteLine("\n Press any key to continue...");
+                            Console.ReadKey(true);
+                            break;
+                        }
+                    case 6:
                         exit = true;
                         var result = Task.Run(async () =>
                         {
@@ -265,6 +273,106 @@ namespace ConsoleClient
                         break;
                 }
             }
+        }
+
+        private void StartGameWithAI()
+        {
+            var g = Task.Run(async () =>
+            {
+                return await _httpClient.GetAsync($"user/start/ai?login={_account.Login}");
+            }).Result;
+            _inGame = true;
+            int counter = 0;
+            CheckGame();
+            while (_inGame)
+            {
+                StartRoundTimer();
+                string figure = "";
+                Console.Clear();
+                var option = MenuManager.Menu($"Round {counter} (With AI)", _width, new string[]
+                    {
+                        "Parer",
+                        "Rock",
+                        "Scissors",
+                        "Quit Match"
+                    });
+                switch (option)
+                {
+                    case 0:
+                        figure = "paper";
+                        break;
+                    case 1:
+                        figure = "rock";
+                        break;
+                    case 2:
+                        figure = "scissors";
+                        break;
+                    case 3:
+                        {
+                            _inGame = false;
+                            var r = Task.Run(async () =>
+                            {
+                                return await _httpClient.GetAsync($"user/quit/game?login={_account.Login}");
+                            }).Result;
+                            break;
+                        }
+                }
+                var response = Task.Run(async () =>
+                {
+                    return await _httpClient
+                       .GetAsync($"user/session/figure?login={_account.Login}&figure={figure}");
+                }).Result;
+
+                _inRound = Task.Run(async () =>
+                {
+                    return await _httpClient
+                       .GetAsync($"user/check/round?login={_account.Login}");
+                }).Result.StatusCode == HttpStatusCode.OK;
+
+                Console.WriteLine("Waiting for AI...");
+                while (_inRound)
+                {
+                    _inRound = Task.Run(async () =>
+                    {
+                        await Task.Delay(1000);
+                        return await _httpClient
+                           .GetAsync($"user/check/round?login={_account.Login}");
+                    }).Result.StatusCode == HttpStatusCode.OK;
+                }
+                if (_inGame)
+                {
+                    var result = Task.Run(async () =>
+                    {
+                        return await _httpClient
+                           .GetAsync($"user/round/result?login={_account.Login}");
+                    }).Result.StatusCode;
+                    switch (result)
+                    {
+                        case HttpStatusCode.OK:
+                            {
+                                Console.WriteLine(TableBuilder.AlignCentre("You won!", _width));
+                                break;
+                            }
+                        case HttpStatusCode.NotFound:
+                            {
+                                Console.WriteLine(TableBuilder.AlignCentre("You lost!", _width));
+                                break;
+                            }
+                        case HttpStatusCode.NoContent:
+                            {
+                                Console.WriteLine(TableBuilder.AlignCentre("Draw!", _width));
+                                break;
+                            }
+                    }
+                    var temp = Task.Run(async () =>
+                    {
+                        await Task.Delay(1000);
+                        return true;
+                    }).Result;
+                }
+                counter++;
+            }
+            Console.WriteLine("\n" + TableBuilder.AlignCentre("Match Ended!", _width));
         }
 
         private void EnterPrivateRoom()

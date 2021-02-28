@@ -84,8 +84,8 @@ namespace GameWebApplication.Services
                             {
                                 Winner = ("draw"),
                                 Looser = ("draw"),
-                                WinnerFigure = user2.GetCurrentFigure(),
-                                LooserFigure = user1.GetCurrentFigure()
+                                WinnerFigure = Figure.None,
+                                LooserFigure = Figure.None
                             };
                         }
                 }
@@ -97,37 +97,73 @@ namespace GameWebApplication.Services
 
         public async Task<Round> StartRoundWithAIAsync(IUserDto user, CancellationToken ct, CancellationToken timeoutCt)
         {
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
-                var aiFigure = new AIPlayer().GetRandomFigure();
+                user.StartRound();
+
+                _logger.LogWarning($"Waiting for user {user.Account.Login}" +
+                        $"turn");
                 while (user.GetCurrentFigure() == Figure.None)
                 {
-                    ct.ThrowIfCancellationRequested();
-                    if (timeoutCt.IsCancellationRequested) throw new TimeoutException(nameof(timeoutCt));
+
+                    if (ct.IsCancellationRequested)
+                    {
+                        user.EndRound();
+                        
+                        return default;
+                    }
+
+                    if (timeoutCt.IsCancellationRequested) return default;
                 }
+                var aiFigure = new AIPlayer().GetRandomFigure();
+
+                _logger.LogWarning($"User {user.Account.Login} " +
+                    $"and AI have chosen figures {user.GetCurrentFigure()}" +
+                    $"and {aiFigure}!");
 
                 var result = CheckForWinner(user.GetCurrentFigure(), aiFigure);
 
+                user.EndRound();
+
+                await Task.Delay(1000);
                 switch (result)
                 {
                     case 1:
-                        return new Round
                         {
-                            //Winner = (user.Account.Login, user.GetCurrentFigure()),
-                           // Looser = ("computer", aiFigure)
-                        };
+                            _logger.LogWarning($"Player {user.Account.Login} won!");
+                            user.LastRoundResult = "victory";
+                            return new Round
+                            {
+                                Winner = (user.Account.Login),
+                                Looser = "computer",
+                                WinnerFigure = user.GetCurrentFigure(),
+                                LooserFigure = aiFigure
+                            };
+                        }
                     case 2:
-                        return new Round
                         {
-                           // Winner = ("computer", aiFigure),
-                           // Looser = (user.Account.Login, user.GetCurrentFigure())
-                        };
+                            _logger.LogWarning($"Computer won!");
+                            user.LastRoundResult = "defeat";
+                            return new Round
+                            {
+                                Winner = "computer",
+                                Looser = user.Account.Login,
+                                WinnerFigure = aiFigure,
+                                LooserFigure = user.GetCurrentFigure()
+                            };
+                        }
                     case 0:
-                        return new Round
                         {
-                           // Winner = ("draw", default(Figure)),
-                           // Looser = ("draw", default(Figure))
-                        };
+                            user.LastRoundResult = "draw";
+                            
+                            return new Round
+                            {
+                                Winner = ("draw"),
+                                Looser = ("draw"),
+                                WinnerFigure = Figure.None,
+                                LooserFigure = Figure.None
+                            };
+                        }
                 }
                 return default;
             }, timeoutCt);
