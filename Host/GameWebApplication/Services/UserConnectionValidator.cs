@@ -40,8 +40,11 @@ namespace GameWebApplication.Services
             {
                 if (!u.CheckForConnection())
                 {
-                    await _gamingPlatform.DisconnectUserAsync(u.Account.Login);
-                    _logger.LogInformation($"user {u.Account.Login} disconnected due to timeout!");
+                    if (!u.IsActive())
+                    {
+                        await _gamingPlatform.DisconnectUserAsync(u.Account.Login);
+                        _logger.LogWarning($"user {u.Account.Login} disconnected due to timeout!");
+                    }
                 }
                 else
                 {

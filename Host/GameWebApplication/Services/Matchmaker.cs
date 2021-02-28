@@ -31,7 +31,7 @@ namespace GameWebApplication.Services
                 { 
                     try
                     {
-                        while (!user.IsReadyForNextRound())
+                        while (true)   ///// FIX!
                         {
                             if (timeoutHasCome)
                             {
@@ -51,7 +51,7 @@ namespace GameWebApplication.Services
                     }
                     catch (TaskCanceledException e)
                     {
-                        user.ResetReady();
+                        user.ResetCancellationToken(); /// FIX maybe
                         user.ExitGame();
 
                         if (session.Rounds.Count == 0) return;
@@ -77,48 +77,42 @@ namespace GameWebApplication.Services
                 var timer = new Timer(Callback => { timeoutHasCome = true; }, null, 300_000,
                     Timeout.Infinite);
                 var session = new Session(user1.Account.Login, user2.Account.Login);
-                while (true)
+                await Task.Delay(3000);
+
+                while (!user1.CurrentGame().Token.IsCancellationRequested
+                || !user2.CurrentGame().Token.IsCancellationRequested)
                 {
-                    try
+                    if (timeoutHasCome)
                     {
-                        while (!user1.IsReadyForNextRound() && !user2.IsReadyForNextRound())
-                        {
-                            if (timeoutHasCome)
-                            {
-                                if (session.Rounds.Count == 0) return;
-                                session.EndingReason = "session was stopped due to timeout";
-                                user1.RegisterNewSession(session);
-                                user2.RegisterNewSession(session);
-                                return;
-                            }
-                        }
-
-                        var round = await _gamePerformer.StartRoundWithPlayerAsync(user1, user2,
-                            user1.CurrentGame().Token, user2.CurrentGame().Token,
-                            new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
-
-                        if (round != null) session.Rounds.Add(round);
-                    }
-                    catch (OperationCanceledException e)        // maybe here
-                    {
-                        user1.ResetReady();
-                        user2.ResetReady();
-                        user1.ExitGame();
-                        user2.ExitGame();
-
                         if (session.Rounds.Count == 0) return;
-                        session.EndingReason = "user quited session";
+
+                        session.EndingReason = "session was cancelled due to timeout";
                         user1.RegisterNewSession(session);
                         user2.RegisterNewSession(session);
                         return;
                     }
-                    catch (TimeoutException)
+                    _logger.LogWarning($"User {user1.Account.Login} " +
+                        $"and {user2.Account.Login} started new round!");
+                    var round = await _gamePerformer.StartRoundWithPlayerAsync(user1, user2,
+                            user1.CurrentGame().Token, user2.CurrentGame().Token,
+                            new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
+
+                    if (round != null)
                     {
-                        continue;
+                        session.Rounds.Add(round);
+                        timer.Change(300_000, Timeout.Infinite);
                     }
-                    user1.ResetReady();
-                    user2.ResetReady();
                 }
+                timer.Dispose();
+                user1.ExitGame();
+                user2.ExitGame();
+                user1.ResetCancellationToken();
+                user2.ResetCancellationToken();
+                if (session.Rounds.Count == 0) return;
+                session.EndingReason = "user quited session";
+                user1.RegisterNewSession(session);
+                user2.RegisterNewSession(session);
+                return;
             });
         }
     }

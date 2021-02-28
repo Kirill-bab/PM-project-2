@@ -17,8 +17,13 @@ namespace GameWebApplication.Abstractions
         public Task<string> StartPrivateSessionAsync(string login);
         public Task<bool> ConnectToPrivateSessionAsync(string login, string gameKey);
         public Task StartAISessionAsync(string login);
-        public Task<IStatistics> GetUserStatistics(string login);
-        public Task<IStatistics[]> GetGlobalStatistics();
-        public Task ConfirmUserConnection(string login);
+        public Task<Statistics> GetUserStatistics(string login);
+        public Task<Statistics[]> GetGlobalStatistics();
+        public Task<bool> ConfirmUserConnection(string login);
+        public Task<bool> CheckIfInQueue(string login);
+        public Task QuitCurrentGame(string login);
+        public Task ChangeUserFigure(string login, Figure figure);
+        public Task<bool> CheckIfInRound(string login);
+        public Task<string> GetLastRoundResult(string login);
     }
 }

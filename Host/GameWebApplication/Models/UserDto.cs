@@ -23,14 +23,16 @@ namespace GameWebApplication.Models
         }
         public bool IsInQueue { get; set; }
 
-        private bool _isReadyForNextRound;
         private bool _isActive;
         private Figure _currentFigure;
         private readonly Stopwatch _currentPeriodTime;
         private bool _isConnected;
         private CancellationTokenSource _currentGame;
         private bool _isInGame;
+        private bool _isInRound;
         private TimeSpan _userTimeInGame => TimeSpan.Parse(this.Account.Statistics.TotalTimeInGame);
+
+        public string LastRoundResult { get; set; }
 
         public UserDto()
         {
@@ -38,7 +40,6 @@ namespace GameWebApplication.Models
             IsActive = false;
             _currentFigure = Figure.None;
             _currentPeriodTime = new Stopwatch();
-            _isReadyForNextRound = false;
             _isConnected = false;
             _isInGame = false;
             IsInQueue = false;
@@ -50,25 +51,10 @@ namespace GameWebApplication.Models
             IsActive = false;
             _currentFigure = Figure.None;
             _currentPeriodTime = new Stopwatch();
-            _isReadyForNextRound = false;
             _isConnected = false;
             _currentGame = new CancellationTokenSource();
             _isInGame = false;
             IsInQueue = false;
-        }
-        public void SetReady()
-        {
-            _isReadyForNextRound = true;
-        }
-
-        public void ResetReady()
-        {
-            _isReadyForNextRound = false;
-            ResetCancellationToken();
-        }
-        public bool IsReadyForNextRound()
-        {
-            return _isReadyForNextRound;
         }
 
         public void Activate()
@@ -77,7 +63,6 @@ namespace GameWebApplication.Models
             {
                 IsActive = true;
                 _currentPeriodTime.Start();
-                _isReadyForNextRound = true;
                 IsInQueue = false;
             }
         }
@@ -104,10 +89,10 @@ namespace GameWebApplication.Models
                 IsActive = false;
                 _currentPeriodTime.Stop();
                 this.Account.Statistics.TotalTimeInGame = (_currentPeriodTime.Elapsed + _userTimeInGame).ToString();
-                _isReadyForNextRound = false;
                 _isConnected = false;
                 _isInGame = false;
                 _currentGame.Cancel();
+                //_currentGame.Dispose();
             }
         }
 
@@ -129,7 +114,6 @@ namespace GameWebApplication.Models
         public void ChangeCurrentFigure(Figure fig)
         {
             _currentFigure = fig;
-            SetReady();
         }
 
         public CancellationTokenSource CurrentGame()
@@ -137,8 +121,10 @@ namespace GameWebApplication.Models
             return _currentGame;
         }
 
-        private void ResetCancellationToken()
+        public void ResetCancellationToken()
         {
+            _currentGame.Cancel();
+            //_currentGame.Dispose();
             _currentGame = new CancellationTokenSource();
         }
 
@@ -149,6 +135,8 @@ namespace GameWebApplication.Models
 
         public void ExitGame()
         {
+            _currentGame.Cancel();
+            //_currentGame.Dispose();
             _isInGame = false;
         }
 
@@ -157,5 +145,20 @@ namespace GameWebApplication.Models
             return _isInGame;
         }
 
+        public void StartRound()
+        {
+            _isInRound = true;
+        }
+
+        public void EndRound()
+        {
+            _currentFigure = Figure.None;
+            _isInRound = false;
+        }
+
+        public bool IsInRound()
+        {
+            return _isInRound;
+        }
     }
 }

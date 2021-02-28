@@ -1,26 +1,26 @@
 [
   {
-    "login": "someLogin",
-    "password": "somePassword",
+    "login": "login",
+    "password": "password",
+    "statistics": {
+      "sessionsList": [],
+      "totalTimeInGame": "00:07:04.3971628"
+    }
+  },
+  {
+    "login": "newLogin",
+    "password": "password",
     "statistics": {
       "sessionsList": [],
       "totalTimeInGame": "00:00:00"
     }
   },
   {
-    "login": "someAnotherLogin",
-    "password": "somePassword",
+    "login": "mike",
+    "password": "11111111",
     "statistics": {
       "sessionsList": [],
-      "totalTimeInGame": "00:00:00"
-    }
-  },
-  {
-    "login": "Mike",
-    "password": "pipopu",
-    "statistics": {
-      "sessionsList": [],
-      "totalTimeInGame": "00:00:00"
+      "totalTimeInGame": "00:06:28.5968454"
     }
   }
 ]

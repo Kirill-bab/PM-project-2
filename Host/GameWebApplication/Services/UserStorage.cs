@@ -18,22 +18,24 @@ namespace GameWebApplication.Services
         private List<IUserDto> _users = new List<IUserDto>();
         private readonly List<string> _bannedUsers = new List<string>(0);
         private readonly ILogger<UserStorage> _logger;
+        private readonly List<Timer> _unbanTimers;
 
         public UserStorage(ILoggerFactory loggerFactory)
         {
+            _unbanTimers = new List<Timer>();
             _logger = loggerFactory.CreateLogger<UserStorage>();
         }
 
         public Task BanUser(IUserDto user)
-        {
-            new Timer(callback => { UnBanUser(user); }, null, 120_000, Timeout.Infinite);
+        {           
             return Task.Run(() =>
-            {
+            {                
                 lock (_bannedUsersLockObj)
                 {
+                    _unbanTimers.Add(new Timer(callback => { UnBanUser(user.Account.Login); }, null, 120_000, Timeout.Infinite));
                     _bannedUsers.Add(user.Account.Login);
                 }
-                _logger.LogInformation($"user {user.Account.Login} banned for 3 minutes!");
+                _logger.LogWarning($"user {user.Account.Login} banned for 3 minutes!");
             });
         }
 
@@ -51,7 +53,7 @@ namespace GameWebApplication.Services
                     us = _users.Find(u => u.Account.Login == user.Account.Login);
                 }
                 us.Disactivate();
-                _logger.LogInformation($"user {us.Account.Login} disactivated!");
+                _logger.LogWarning($"user {us.Account.Login} disactivated!");
             });
             
         }
@@ -63,7 +65,7 @@ namespace GameWebApplication.Services
 
         public void InitializeUserList(string json)
         {
-            _logger.LogInformation("INITIALIZATION STARTED!");
+            _logger.LogWarning("INITIALIZATION STARTED!");
             var usersAccounts = JsonSerializer.Deserialize<List<UserAccount>>(json, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -72,20 +74,20 @@ namespace GameWebApplication.Services
             foreach (var user in usersAccounts)
             {
                 _users.Add(new UserDto(user));
-                _logger.LogInformation($"user {user.Login} initialized!");
+                _logger.LogWarning($"user {user.Login} initialized!");
             }
-            _logger.LogInformation("INITIALIZATION ENDED!");
+            _logger.LogWarning("INITIALIZATION ENDED!");
         }
         
-        public Task UnBanUser(IUserDto user)
+        public Task UnBanUser(string login)
         {
             return Task.Run(() =>
             {
                 lock (_bannedUsersLockObj)
                 {
-                    _bannedUsers.Remove(user.Account.Login);
+                    _bannedUsers.Remove(login);
                 }
-                _logger.LogInformation($"user {user.Account.Login} is unbanned!");
+                _logger.LogWarning($"user {login} is unbanned!");
             });
         }
 
@@ -94,19 +96,19 @@ namespace GameWebApplication.Services
             return Task.Run<string>(() =>
             {
                 string answer = "";
-                var match = _users.Find(u => u.Account.Login == login &&
-                 u.Account.Password == password);
+                var match = _users.Find(u => u.Account.Login == login);
                 if ( match != default(IUserDto))
                 {
-                    _logger.LogInformation($"user {login} found on userList!");
+                    _logger.LogWarning($"user {login} found on userList!");
                     lock (_bannedUsersLockObj)
                     {
                         if (_bannedUsers.Where(usr => usr == login).Count() != 0)
                         {
                             answer = "banned";
-                            _logger.LogInformation($"user {login} found on banned List!");
+                            _logger.LogWarning($"user {login} found on banned List!");
                         }
                         else if (match.IsActive()) answer = "alreadyOnPlatform";
+                        else if (match.Account.Password != password) return "wrongPassword";
                         else answer = "ok";
                     }
                     return answer;
@@ -131,16 +133,16 @@ namespace GameWebApplication.Services
                 {
                     _users.Add(new UserDto(new UserAccount(login, password)));
                 }
-                _logger.LogInformation($"user {login} registered!");
+                _logger.LogWarning($"user {login} registered!");
                 return true;
             });
         }
 
-        public Task<IStatistics[]> GetGlobalStatistics()
+        public Task<Statistics[]> GetGlobalStatistics()
         {
             return Task.Run(() =>
             {
-                IStatistics[] globalStats;
+                Statistics[] globalStats;
                 lock (_usersLockObj)
                 {
                     globalStats = _users
