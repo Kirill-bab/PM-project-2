@@ -80,7 +80,7 @@ namespace GameWebApplication.Services
                 await Task.Delay(3000);
 
                 while (!user1.CurrentGame().Token.IsCancellationRequested
-                || !user2.CurrentGame().Token.IsCancellationRequested)
+                && !user2.CurrentGame().Token.IsCancellationRequested)
                 {
                     if (timeoutHasCome)
                     {
@@ -93,12 +93,19 @@ namespace GameWebApplication.Services
                     }
                     _logger.LogWarning($"User {user1.Account.Login} " +
                         $"and {user2.Account.Login} started new round!");
+                    _logger.LogWarning($"First player fig: {user1.GetCurrentFigure()}, " +
+                        $"Second player fig: {user2.GetCurrentFigure()}");
                     var round = await _gamePerformer.StartRoundWithPlayerAsync(user1, user2,
                             user1.CurrentGame().Token, user2.CurrentGame().Token,
                             new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token);
 
+                    user1.ChangeCurrentFigure(Figure.None);
+                    user2.ChangeCurrentFigure(Figure.None);
+
                     if (round != null)
                     {
+                        _logger.LogWarning($"new round successfully added" +
+                            $" to users {user1.Account.Login} and {user2.Account.Login}");
                         session.Rounds.Add(round);
                         timer.Change(300_000, Timeout.Infinite);
                     }
@@ -106,10 +113,14 @@ namespace GameWebApplication.Services
                 timer.Dispose();
                 user1.ExitGame();
                 user2.ExitGame();
+                _logger.LogWarning($"User {user1.Account.Login} " +
+                        $"and {user2.Account.Login} ended session!");
                 user1.ResetCancellationToken();
                 user2.ResetCancellationToken();
                 if (session.Rounds.Count == 0) return;
                 session.EndingReason = "user quited session";
+                _logger.LogWarning($"User {user1.Account.Login} " +
+                        $"and {user2.Account.Login} added new session to their sesion lists!");
                 user1.RegisterNewSession(session);
                 user2.RegisterNewSession(session);
                 return;

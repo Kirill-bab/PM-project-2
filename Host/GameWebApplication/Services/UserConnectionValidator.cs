@@ -38,13 +38,11 @@ namespace GameWebApplication.Services
         {
             _users.AsParallel().Where(u => u.IsActive()).ForAll(async u =>
             {
+                //_logger.LogInformation(u.Account.Login + "is checked for connection");
                 if (!u.CheckForConnection())
                 {
-                    if (!u.IsActive())
-                    {
-                        await _gamingPlatform.DisconnectUserAsync(u.Account.Login);
-                        _logger.LogWarning($"user {u.Account.Login} disconnected due to timeout!");
-                    }
+                    await _gamingPlatform.DisconnectUserAsync(u.Account.Login);
+                    _logger.LogWarning($"user {u.Account.Login} disconnected due to timeout!"); 
                 }
                 else
                 {

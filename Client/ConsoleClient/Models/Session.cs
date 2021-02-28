@@ -10,7 +10,8 @@ namespace ConsoleClient.Models
         public string Player2 { get; set; }
         public string  EndingReason { get; set; }
         public List<Round> Rounds { get; set; }
-      
+        public string StartedAt { get; set; }
+
         public Session()
         {
 
@@ -18,8 +19,7 @@ namespace ConsoleClient.Models
 
         public override string ToString()
         {
-            return TableBuilder.AlignCentre(Player1, 20) + TableBuilder.AlignCentre(Player2, 20) +
-                TableBuilder.AlignCentre(EndingReason, 5);
+            return Player1.PadRight(15) + Player2.PadRight(15) + StartedAt;
         }
     }
 }

@@ -64,6 +64,8 @@ namespace GameWebApplication.Models
                 IsActive = true;
                 _currentPeriodTime.Start();
                 IsInQueue = false;
+                Console.WriteLine($"user {Account.Login} activated!");
+                _isConnected = true;
             }
         }
         public Figure GetCurrentFigure()
@@ -93,6 +95,7 @@ namespace GameWebApplication.Models
                 _isInGame = false;
                 _currentGame.Cancel();
                 //_currentGame.Dispose();
+                Console.WriteLine($"user {Account.Login} disactivated!"); 
             }
         }
 
@@ -152,7 +155,6 @@ namespace GameWebApplication.Models
 
         public void EndRound()
         {
-            _currentFigure = Figure.None;
             _isInRound = false;
         }
 

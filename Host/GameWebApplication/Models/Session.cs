@@ -13,7 +13,8 @@ namespace GameWebApplication.Models
         public string Player2 { get; set; }
         public string  EndingReason { get; set; }
         public List<Round> Rounds { get; set; }
-      
+        public string StartedAt { get; set; }
+
         public Session()
         {
 
@@ -23,6 +24,12 @@ namespace GameWebApplication.Models
             Player1 = player1 ?? throw new ArgumentNullException(nameof(player1));
             Player2 = player2 ?? throw new ArgumentNullException(nameof(player2));
             Rounds = new List<Round>(5);
+            StartedAt = new DateTime(DateTime.Now.Year,
+                DateTime.Now.Month,
+                DateTime.Now.Day,
+                DateTime.Now.Hour,
+                DateTime.Now.Minute,
+                DateTime.Now.Second).ToString();
         }
 
         public override string ToString()

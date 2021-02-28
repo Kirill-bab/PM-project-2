@@ -195,7 +195,8 @@ namespace ConsoleClient
             var stats = JsonSerializer
                 .Deserialize<List<Statistics>>(Task
                 .Run(async () => await response.Content.ReadAsStringAsync()).Result);
-            Stats.DisplayGlobal(stats);
+
+            Stats.DisplayGlobal(stats);   // UNFINISHED !!!
         }
         private void StartPlatformSession(string login, string password)
         {
@@ -256,6 +257,10 @@ namespace ConsoleClient
                         }
                     case 5:
                         exit = true;
+                        var result = Task.Run(async () =>
+                        {
+                            return await _httpClient.GetAsync($"user/disconnect?login={_account.Login}");
+                        });
                         _connect = false;
                         break;
                 }
@@ -309,8 +314,16 @@ namespace ConsoleClient
                     return;
                 }
             } while (_checkSearch);
+            Console.Clear();
             cts.Cancel();
             Console.WriteLine(TableBuilder.AlignCentre("Match Found!",_width));
+
+            var temp = Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                return true;
+            }).Result;
+
             StartSeries();
         }
 
@@ -337,10 +350,10 @@ namespace ConsoleClient
                         figure = "paper";
                         break;
                     case 1:
-                        figure = "paper";
+                        figure = "rock";
                         break;
                     case 2:
-                        figure = "paper";
+                        figure = "scissors";
                         break;
                     case 3:
                         {
@@ -357,13 +370,14 @@ namespace ConsoleClient
                     return await _httpClient
                        .GetAsync($"user/session/figure?login={_account.Login}&figure={figure}");
                 }).Result;
-
+    
                 _inRound = Task.Run(async () =>
                 {
                     return await _httpClient
                        .GetAsync($"user/check/round?login={_account.Login}");
                 }).Result.StatusCode ==HttpStatusCode.OK;
-                
+
+                Console.WriteLine("Waiting for oponent...");
                 while (_inRound)
                 {
                     _inRound = Task.Run(async () =>
@@ -469,8 +483,9 @@ namespace ConsoleClient
                 {
                     _inGame = (await _httpClient
                     .GetAsync($"user/check/game?login={_account.Login}")).StatusCode == HttpStatusCode.OK;
-                    await Task.Delay(2000);
+                    await Task.Delay(1000);
                 }
+
             });
         }
 
